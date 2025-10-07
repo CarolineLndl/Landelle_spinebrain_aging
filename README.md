@@ -4,7 +4,9 @@
 > TBD
 
 **Preprint:**
-> TBD
+>  Landelle C, Kinany K, St-Onge S, Lungu O, Van De Ville D, Misic B, Marchand-Pauvert V, De Leener B, Doyon J. 
+Spinal cord structural and functional architecture and its shared organization with the brain across the adult lifespan 
+bioRxiv 2025.10.02.679488;  doi: https://doi.org/10.1101/2025.10.02.679488
 
 **Data:**
 Functional data of the younger participant is available [here](https://openneuro.org/datasets/ds005075/).  
@@ -13,11 +15,26 @@ For other participants, please contact the authors.
 ---
 ### Overview
 This repository support the project on spinal cord structural-functional architecture and its age related changes.   
-Most of the code was written in Python 3.10 and some analyses also were done in Matlab 2024b to access SPM.
+Most of the code was written in Python 3.10 and some analyses also were done in Matlab 2024b to access SPM.  
+Toolboxes used include:
+- Spinal Cord Toolbox (SCT, version 5.6.0; De Leener et al., 2017)  
+- Oxford Center for fMRI of the Software Library (FSL, version 5.0)   
+- Statistical Parametric Mapping (SPM12, running on Matlab 2021b)  
+- Tapas PhysiO toolbox (release 2022a, V8.1.0; Kasper et al., 2017)  
+- Nilearn toolbox (version 0.9.1)
 
----
-### Repository
-The repository contains the following folders:
+<div style="background-color: #f2ebccff; padding: 10px;">
+/!\ The upload of this repository is in progress    
+- Preprocessing func (TBD)
+- Denoising (TBD)
+- Preprocessing anat (TBD)
+- Analyses func (TBD)
+- Analyses anat (TBD)
+</div>
+
+---  
+### Repository  
+The repository contains the following folders:  
 - /code/
 - /config/
 - /notebook/

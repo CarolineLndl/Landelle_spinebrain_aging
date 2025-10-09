@@ -484,6 +484,7 @@ class Preprocess_Br:
         if i_img==None:
             raise Warning("Please provide filename of the input file")
         
+              
            
         #1. create ouput folder
         preprocess_dir=self.config["main_dir"]+ self.config["preprocess_dir"]["bmpd_dir"] if ID[0]=="P" else self.config["main_dir"] +self.config["preprocess_dir"]["main_dir"]
@@ -975,7 +976,7 @@ class Preprocess_Sc:
             
             elif img_type!="func":
                 if tissue=="gm":
-                    string="sct_deepseg_gm -i " +i_img +" -c "+contrast_anat+" -thr 0.01 -o " + o_img
+                    string="sct_deepseg_gm -i " +i_img +" -thr 0.01 -o " + o_img
 
                 elif tissue=="wm":
                     string1="fslmaths " + i_img+" -sub " + i_gm_img +" " + o_img

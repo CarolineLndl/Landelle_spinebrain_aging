@@ -25,9 +25,10 @@ Toolboxes used include:
 
 <div style="background-color: #f2ebccff; padding: 10px;">
 /!\ The upload of this repository is in progress    
-- Preprocessing func (TBD)
-- Denoising (TBD)
-- Preprocessing anat (TBD)
+- Preprocessing func ✅   
+- Denoising ✅    
+- Preprocessing microstructural ✅
+- Preprocessing diffusion (TBD)
 - Analyses func (TBD)
 - Analyses anat (TBD)
 </div>

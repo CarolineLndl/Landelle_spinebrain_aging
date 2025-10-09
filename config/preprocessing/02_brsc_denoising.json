@@ -7,12 +7,9 @@
 
 "IDs_info_f":"participants_brsc_aging.tsv",
 "structures":["brain","spinalcord"],
-"PAM50_cord":"PAM50_cord.nii.gz",
-"PAM50_cord_cropped":"PAM50_cord_cropped.nii.gz",
-"PAM50_t2":"PAM50_t2.nii.gz",
-"PAM50_t2_cropped":"PAM50_t2_cropped.nii.gz",
-"PAM50_csf":"PAM50_csf.nii.gz",
-"MNI_mask":"/MNI152_T1_1mm_brain_mask_2mm.nii.gz",
+"PAM50_cord":"/template/PAM50/PAM50_cord_cropped.nii.gz",
+"PAM50_t2":"/template/PAM50/PAM50_t2_cropped.nii.gz",
+"MNI_mask":"/template/MNI/MNI152_T1_1mm_brain_mask_2mm.nii.gz",
  
 "design_exp":{"ses_nb":1,
               "ses_names":[""],

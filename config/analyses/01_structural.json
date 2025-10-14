@@ -1,0 +1,110 @@
+{"main_dir":"/cerebro/cerebro1/dataset/",
+    "project_dir":"/cerebro/cerebro1/dataset/bmpd/derivatives/Aging_project/",
+"preprocess_dir":{
+    "stratals":"/cerebro/cerebro1/dataset/stratals/derivatives/preprocessing/",
+    "bmpd":"/cerebro/cerebro1/dataset/bmpd/derivatives/spinalcord_processing/"},
+    
+"analysis_dir":{"MTR":"/figures/f01_structural/preprint2025/mtr/",
+    "T2s":"/figures/f01_structural/preprint2025/t2s/",
+    "T1w":"/figures/f01_structural/preprint2025/t1w/",
+"DWI":"/figures/f01_structural/preprint2025/dwi/",
+"cat12":"/figures/f01_structural/preprint2025/brain/"},
+    
+"template":{
+    "spinalcord":{"atlas":"templates/PAM50/atlas/Frostell_gm_28Parcels_7Networks/Frostell_gm_28Parcels_7Networks_order_PAM50_05mm.nii.gz",
+    "tracts_atlas":"templates/PAM50/atlas/whitematter_3tracts/whitematter_3tracts_order_PAM50_05mm.nii.gz"},
+    "t2": "/templates/PAM50/template/PAM50_t2.nii.gz",
+    "cord": "/2024_brsc_aging_project/template/PAM50_cord.nii.gz"},  
+        
+"indiv_space":{
+    "T1w":"/sub-{}/anat/*_T1w_sc.nii.gz",
+    "T1w_cord":"/sub-{}/anat/T1w_seg_aging_project/*_T1w_sc_seg.nii.gz",
+    "T1w_levels":"",
+    "T2s":"/sub-{}/anat/*_T2w.nii.gz",
+    "T2s_cord":"/sub-{}/anat/T2w_aging_project/segmentation/*_T2w_cord_seg.nii.gz",
+    "T2s_vx_gm":"/sub-{}/anat/T2w_aging_project/segmentation/*_T2w_gm_seg.nii.gz",
+    "T2s_vx_wm":"/sub-{}/anat/T2w_aging_project/segmentation/*_T2w_wm_seg.nii.gz",
+    "T2s_canal":"/sub-{}/anat/T2w_aging_project/segmentation/*_T2w_cordCSF_seg.nii.gz",
+    "T2s_levels":"/sub-{}/anat/T2w_aging_project/coregistration/template/PAM50_spinal_levels.nii.gz",
+    "T2s_icaps":"/sub-{}/anat/T2w_aging_project/coregistration/template/PAM50_iCAPs_28Parcels_7Networks.nii.gz",
+    "T2s_atlas":"/sub-{}/anat/T2w_aging_project/coregistration/template/PAM50_Frostell_28Parcels_7Networks.nii.gz",
+    "T2s_gm_atlas":"/sub-{}/anat/T2w_aging_project/coregistration/template/PAM50_Frostell_gm_28Parcels_7Networks.nii.gz",
+    "T2s_wm_atlas":"/sub-{}/anat/T2w_aging_project/coregistration/template/PAM50_Frostell_wm_28Parcels_7Networks.nii.gz",
+    
+    "MTR":"/sub-{}/anat/MT_aging_project/MTR/*MTR.nii.gz",
+    "MTR_seg":"/sub-{}/anat/MT_aging_project/segmentation/*_T1w_cord_seg.nii.gz",
+    "MTR_levels":"/sub-{}/anat/MT_aging_project/coregistration/template/PAM50_spinal_levels.nii.gz",
+    "MTR_icaps":"/sub-{}/anat/MT_aging_project/coregistration/template/PAM50_iCAPs_28Parcels_7Networks.nii.gz",
+    "MTR_atlas":"/sub-{}/anat/MT_aging_project/coregistration/template/PAM50_Frostell_28Parcels_7Networks.nii.gz",
+    "MTR_gm_atlas":"/sub-{}/anat/MT_aging_project/coregistration/template/PAM50_Frostell_gm_28Parcels_7Networks.nii.gz",
+    "MTR_wm_atlas":"/sub-{}/anat/MT_aging_project/coregistration/template/PAM50_Frostell_wm_28Parcels_7Networks.nii.gz",
+    "MTR_tracts_atlas":"/sub-{}/anat/MT_aging_project/coregistration/template/PAM50_wm_atlas_3tracts.nii.gz",
+    "FA":"/sub-{}/dwi/dti_metrics/*FA.nii.gz",
+    "MD":"/sub-{}/dwi/dti_metrics/*MD.nii.gz",
+    "RD":"/sub-{}/dwi/dti_metrics/*RD.nii.gz",
+    "AD":"/sub-{}/dwi/dti_metrics/*AD.nii.gz",
+    "DWI_seg":"/sub-{}/dwi/segmentation/*moco_dwi_mean_seg.nii.gz",
+    "DWI_levels":"/sub-{}/dwi/coregistration/template/PAM50_spinal_levels.nii.gz",
+    "DWI_icaps":"/sub-{}/dwi/coregistration/template/PAM50_iCAPs_28Parcels_7Networks.nii.gz",
+    "DWI_atlas":"/sub-{}/dwi/coregistration/template/PAM50_Frostell_wm_28Parcels_7Networks.nii.gz",
+    "DWI_tracts_atlas":"/sub-{}/dwi/coregistration/template//PAM50_wm_atlas_3tracts.nii.gz"
+},  
+
+"PAM50_space":{
+    "T1w":"/sub-{}/anat/T1w_sc_coreg_aging_project/coregistration/anat2template.nii.gz",
+    "T1w_cord":"",
+    "T2s":"/sub-{}/anat/T2w_aging_project/coregistration/*_T2w_coreg_in_PAM50.nii.gz",
+    "T2s_cord":"/sub-{}/anat/T2w_aging_project/coregistration/*_T2w_cord_seg_inPAM50.nii.gz",
+    "T2s_gm":"/sub-{}/anat/T2w_aging_project/coregistration/*_T2w_gm_seg_inPAM50.nii.gz",
+    "T2s_wm":"/sub-{}/anat/T2w_aging_project/coregistration/*_T2w_wm_seg_inPAM50.nii.gz",
+    "T2s_levels":"/sub-{}/anat/T2w_aging_project/coregistration/template/PAM50_spinal_levels.nii.gz",
+     "T2s_atlas":"/templates/PAM50/atlas/iCAPs_28Parcels_7Networks/iCAPs_28Parcels_7Networks_order_PAM50_05mm.nii.gz",
+    "MTR":"/sub-{}/anat/MT_aging_project/coregistration/*_MTR_coreg_in_PAM50.nii.gz",
+    "MTR_cord":"",
+    "MTR_levels":"",
+    "FA":"/sub-{}/dwi/dti_metrics/*FA_inPAM50",
+    "RD":"/sub-{}/dwi/dti_metrics/*RD_inPAM50.nii.gz",
+    "AD":"/sub-{}/dwi/dti_metrics/*RD_inPAM50.nii.gz",
+    "MD":"/sub-{}/dwi/dti_metrics/*RD_inPAM50.nii.gz"
+},
+
+"cat12":{"dir":"/sub-{}/anat/brain/segmentation/"},
+    
+ "first_level":"/1_first_level/",
+ "second_level":"/2_second_level/",
+
+"seeds":{"structures":["spinalcord"],
+    "spinalcord":{
+        "atlas_dir":"/templates/PAM50/atlas/",
+        "atlas_tag":"Frostell_gm_28Parcels_7Networks"}},
+
+"labels_VD":{"ventral":["RV","LV"],"dorsal":["RD","LD"]},
+"labels_RL":{"right":["RV","RD"],"left":["LV","LD"]},
+
+"labels1":{"ventral":["RV","LV"],"dorsal":["RD","LD"],"right":["RV","RD"],"left":["LV","LD"],"cross1":["LV","RD"],"cross2":["RV","LD"]},
+"labels2":{"ventral":["ventral"],"dorsal":["dorsal"],"within":["right","left"],"cross":["cross1","cross2"]},
+"level_labels":{"C1":["C1"],"C2":["C2"],"C3":["C3"],"C4":["C4"],"C5":["C5"],"C6":["C6"],"C7":["C7"]},
+    
+"statistics":{"measure":"MTR",
+"model_stats":"OneSampleT",
+    "mask":{"spinalcord":"/templates/PAM50/template/PAM50_cord_C1C7.nii.gz"},
+     "contrast":{"cord":["PAM50_R_gm"]}},
+
+
+
+    
+"population_infos":"/2024_brsc_aging_project/config/participants_brsc_aging.tsv",
+"participants_IDs_T2s":["A001","A003","A004","A005","A006","A007","A008","A009","A010","A011","A012","A013","A015","A016","A017","A019","A020","A021","A023","A024","A025","A026","A027","A028","A029","A030","A032","A033","A034","A035","A036","A037","A038","A039","A043","A044","A045","A046","A047","A048","A049","A050","A051","A052","A054","A056","A058","P028","P030","P031","P033","P043","P047","P049","P050","P057","P089","P094","P096","P098","P099","P100","P104","P105","P106","P108","P109"],
+
+
+
+"participants_IDs_MTR":["A001","A003","A004","A005","A006","A007","A008","A009","A010","A011","A013","A015","A016","A017","A019","A021","A023","A024","A025","A026","A027","A028","A029","A030","A032","A033","A034","A035","A036","A037","A038","A039","A043","A044","A045","A046","A047","A048","A049","A050","A051","A052","A054","A056","A058","P028","P030","P031","P033","P043","P047","P049","P050","P057","P089","P094","P096","P098","P099","P100","P104","P105","P106","P108","P109"],
+
+"participants_IDs_DWI":["A003","A004","A005","A006","A007","A008","A009","A010","A013","A015","A016","A017","A020","A021","A023","A024","A025","A026","A027","A028","A029","A030","A032","A034","A036","A037","A043","A044","A045","A046","A047","A048","A049","A050","A051","A052","A058","P028","P030","P033","P043","P049","P050","P057","P089","P094","P096","P098","P099","P100","P104","P105","P106","P108","P109"],
+    
+"participants_IDs_ALL":["A001","A003","A004","A005","A006","A007","A008","A009","A010","A011","A012","A013","A015","A016","A017","A019","A020","A021","A023","A024","A025","A026","A027","A028","A029","A030","A032","A033","A034","A035","A036","A037","A038","A039","A043","A044","A045","A046","A047","A048","A049","A050","A051","A052","A054","A056","A058","P028","P030","P031","P033","P043","P047","P049","P050","P057","P089","P094","P096","P098","P099","P100","P104","P105","P106","P108","P109"],
+
+"participants_IDs_YA":["P030","P099","A006","A007","A008","A009","A023","A024","A025","A027","A028","A030","A032","A033","A034","A036","A037","A038","A043","A044","A046","A048","A050","A051","A052"],
+"participants_IDs_MA":["P028","P047","P050","P108","P109","A001","A005","A011","A013","A016","A020","A021","A026","A029","A035","A039","A045","A047","A049","A054","A056","A058"],
+"participants_IDs_OA":["P031","P033","P043","P049","P057","P089","P094","P096","P098","P100","P104","P105","P106","A003","A004","A010","A012","A015","A017","A019"]
+}

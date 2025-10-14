@@ -25,12 +25,13 @@ Most of the code was written in Python 3.10 and some analyses also were done in 
 
 <div style="background-color: #f2ebccff; padding: 10px;">
 ⚠️ The upload of this repository is in progress    </br>
-- Preprocessing func ✅   </br>
-- Denoising ✅    </br>
-- Preprocessing microstructural ✅</br>  
-- Preprocessing diffusion (TBD)✅</br>  
-- Analyses func (TBD)</br>
-- Analyses anat (TBD)</div>
+- Preprocessing func, microstructural and diffusion ✅   </br>
+- Func Denoising ✅    </br>
+- Fig 1 ✅    </br>
+- Fig 2 (TBD)</br>
+- Fig 3 (TBD)</br>
+- Fig 4 (TBD)</br>
+- Suppl material</div>
 
 ---  
 ### Repository  

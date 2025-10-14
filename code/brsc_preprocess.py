@@ -1438,7 +1438,7 @@ class Preprocess_DWI_Sc:
             if ID in config['files_specificities']["dwi"]:
                 tag_anat=config['files_specificities']["dwi"][ID]
             preprocess_dir=self.config["main_dir"]+ self.config["preprocess_dir"]["bmpd_dir"] if ID[0]=="P" else self.config["main_dir"] +self.config["preprocess_dir"]["main_dir"]
-            
+            os.makedirs(preprocess_dir + "sub-" + ID + "/dwi/",exist_ok=True)
             # Initiate the nifit, bval and bvec, raw variables
             raw_dir= self.config["main_dir"]+ self.config["bmpd_raw_dir"] if ID[0]=="P" else self.config["main_dir"]+ self.config["raw_dir"]
 
@@ -1453,7 +1453,7 @@ class Preprocess_DWI_Sc:
                 IDbis=self.config["double_IDs"][ID]
             
             # Load the raw files
-            #print(raw_dir + "/sub-" + ID+ "/"+ self.config["design_exp"]["ses_names"][0]+ "/dwi/sub-"+IDbis+tag_anat+"_dwi.nii.gz")
+            print(raw_dir + "/sub-" + ID+ "/"+ self.config["design_exp"]["ses_names"][0]+ "/dwi/sub-"+IDbis+tag_anat+"_dwi.nii.gz")
             self.dwi_raw_files["nifti"].append(glob.glob(raw_dir + "/sub-" + ID+ "/"+ self.config["design_exp"]["ses_names"][0]+ "/dwi/sub-"+IDbis+tag_anat+"_dwi.nii.gz")[0])
             self.dwi_raw_files["bvec"].append(glob.glob(raw_dir + "/sub-" + ID+ "/"+ self.config["design_exp"]["ses_names"][0]+ "/dwi/sub-"+IDbis+tag_anat+"_dwi.bvec")[0])
             self.dwi_raw_files["bval"].append(glob.glob(raw_dir + "/sub-" + ID+ "/"+ self.config["design_exp"]["ses_names"][0]+ "/dwi/sub-"+IDbis+tag_anat+"_dwi.bval")[0])

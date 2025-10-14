@@ -1,14 +1,13 @@
-# Spinal cord structural-functional architecture and its age related changes
-
+# Spinal cord structural-functional architecture and its shared organization with the brain across the adult lifespan 
 **Cite:**
 > TBD
 
-**Preprint:**
+**📜 Preprint:**
 >  Landelle C, Kinany K, St-Onge S, Lungu O, Van De Ville D, Misic B, Marchand-Pauvert V, De Leener B, Doyon J. 
 Spinal cord structural and functional architecture and its shared organization with the brain across the adult lifespan 
 bioRxiv 2025.10.02.679488;  doi: https://doi.org/10.1101/2025.10.02.679488
 
-**Data:**
+**💾 Data:**  
 Functional data of the younger participant is available [here](https://openneuro.org/datasets/ds005075/).  
 For other participants, please contact the authors.  
 
@@ -16,7 +15,8 @@ For other participants, please contact the authors.
 ### Overview
 This repository support the project on spinal cord structural-functional architecture and its age related changes.   
 Most of the code was written in Python 3.10 and some analyses also were done in Matlab 2024b to access SPM.  
-Toolboxes used include:
+
+🛠️ Toolboxes used include:
 - Spinal Cord Toolbox (SCT, version 5.6.0; De Leener et al., 2017)  
 - Oxford Center for fMRI of the Software Library (FSL, version 5.0)   
 - Statistical Parametric Mapping (SPM12, running on Matlab 2021b)  
@@ -24,14 +24,13 @@ Toolboxes used include:
 - Nilearn toolbox (version 0.9.1)
 
 <div style="background-color: #f2ebccff; padding: 10px;">
-/!\ The upload of this repository is in progress    
-- Preprocessing func ✅   
-- Denoising ✅    
-- Preprocessing microstructural ✅
-- Preprocessing diffusion (TBD)
-- Analyses func (TBD)
-- Analyses anat (TBD)
-</div>
+⚠️ The upload of this repository is in progress    </br>
+- Preprocessing func ✅   </br>
+- Denoising ✅    </br>
+- Preprocessing microstructural ✅</br>  
+- Preprocessing diffusion (TBD)✅</br>  
+- Analyses func (TBD)</br>
+- Analyses anat (TBD)</div>
 
 ---  
 ### Repository  
@@ -54,11 +53,15 @@ You will see description in each script.
 #### <span style="background-color:#F0E8E6">/config/ </span>
 The config folder contain the different config files used in each notebook (.json)
 - *participants_brsc_aging.tsv* : containe demographical information about the population
+- preprocessing/*.json : config files used for preprocessing (i.e used by the notebooks in notebook/preprocessing/)
 
 
 #### <span style="background-color:#F0E8E6">/notebook/ </span>
 The notebook folder contain the different notebooks used to run and vizualized the results.  
 Notebook's number correspond to the related figure number
+- /notebook/preprocessing/ : notebooks used for preprocessing
 
 #### <span style="background-color:#F0E8E6">/template/ </span>
 Different images used in the analyses.
+- *PAM50* : for spinal cord preprocessing
+- *MNI* : for brain preprocessing

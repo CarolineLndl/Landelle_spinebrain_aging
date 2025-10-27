@@ -1,0 +1,107 @@
+{"main_dir":"/cerebro/cerebro1/dataset/",
+"project_dir":"/cerebro/cerebro1/dataset/bmpd/derivatives/Aging_project/",
+"preprocess_dir":{
+    "stratals":"/cerebro/cerebro1/dataset/stratals/derivatives/preprocessing/",
+    "bmpd":"/cerebro/cerebro1/dataset/bmpd/derivatives/spinalcord_processing/"},
+    "analysis_dir":"",
+    
+"structure":["brain"],
+    
+"templates":{
+    "brain":
+    {"surface_dir":"/templates/MNI/surf/"},
+    "spinalcord":
+    {"t2":"/templates/PAM50/template/PAM50_t2.nii.gz",
+    "cord":"/templates/PAM50/template/PAM50_cord_C1C7.nii.gz",
+        "csf":"/templates/PAM50/template/PAM50_csf_C1C7.nii.gz",
+        "gm":"/templates/PAM50/template/PAM50_gm_01bin_C1C7.nii.gz",
+        "wm":"/templates/PAM50/template/PAM50_wm_bin_C1C7.nii.gz",
+    "spinal_levels":"/templates/PAM50/template/PAM50_spinal_levels_C1C7_4d.nii.gz",
+    "levels_path":"/templates/PAM50/template/spinal_levels/",
+    "atlas1":"templates/PAM50/atlas/Frostell_gm_28Parcels_7Networks/Frostell_gm_28Parcels_7Networks_order_PAM50_05mm.nii.gz",
+    "atlas":"templates/PAM50/atlas/Frostell_28Parcels_7Networks/Frostell_28Parcels_7Networks_order_PAM50_05mm.nii.gz",
+    "atlas_labels":"templates/PAM50/atlas/iCAPs_gm_28Parcels_7Networks/iCAPs_gm_28Parcels_7Networks.txt"}},  
+    
+"icaps":{
+    "analysis_dir":{
+        "brain":"/connectivity_analyses/iCAPs/denoised_slicewise_dec2024/iCAPs_results/brain_HP_gm_051224_n67_all_Alpha_5_95_Fraction_0DOT05/",
+        "spinalcord":"/figures/f02_functional_sc/icaps/spinalcord/"},
+    "n_k":{"brain":[14],
+    "spinalcord":[7]},
+    "networks":{"brain":["SMC","preMot","Parietal","Audio","Vis1","Vis2","dDMN","vDMN","rFP","lFP","OFC","vSilence","Amygdala","Cereb"],
+    "spinalcord":["C1","C2","C3","C4","C5","C6","C7"]}},
+
+"seed2seed":{
+    "analysis_dir":{
+        "brain":"/figures/f02_functional_sc/seed2seed_oct25/brain/schaefer200_cobra/",
+        "spinalcord":"/figures/f02_functional_sc/seed2seed_oct25/spinalcord/"},
+    "TR": 1.55,
+    "seeds":{"brain":{
+        "atlas_dir":"/templates/MNI/atlas/",
+        "atlas_tag1":"julichcobra",
+    "atlas_tag":"schaefer200_cobra"},
+    "spinalcord":{
+    "atlas_dir":"/templates/PAM50/atlas/",
+        "atlas_tag":"Frostell_28Parcels_7Networks"}},
+"template_space":{"brain":{"func":"/denoising/slice_wise/2_func_in_template/sub-{}/brain/*moco_BP_nostd_inT1w_inTemplate.nii.gz"},
+    "spinalcord":{"func":"/denoising/slice_wise/2_func_in_template/sub-{}/spinalcord/*moco_BP_nostd_inTemplate.nii.gz"}}},
+
+
+"ts_features":{
+    "analysis_dir":{"spinalcord":"/figures/f02_functional_sc/features/sc_oct25/spinalcord/",
+"brain":"/figures/f02_functional_sc/features/sc_oct25/brain/schaefer200_cobra/"},
+    "ts_files":{"spinalcord":"/figures/f02_functional_sc/seed2seed/sc_oct25/spinalcord/first_level/timeseries/sub{}_spinalcord_timeseries_zmean.npy",
+"brain":"/figures/f02_functional_sc/seed2seed/sc_oct25/brain/first_level/timeseries/sub{}_brain_timeseries_zmean.npy"},
+"seeds":{"brain":{
+        "atlas_dir":"/templates/MNI/atlas/",
+        "atlas_tag":"schaefer200_cobra"},
+    "spinalcord":{
+    "atlas_dir":"/templates/PAM50/atlas/",
+        "atlas_tag":"Frostell_28Parcels_7Networks"}},
+"template_space":{"brain":{"func":"/denoising/slice_wise/2_func_in_template/sub-{}/brain/*moco_BP_nostd_inT1w_inTemplate.nii.gz"},
+    "spinalcord":{"func":"/denoising/slice_wise/2_func_in_template/sub-{}/spinalcord/*moco_BP_nostd_inTemplate.nii.gz"}}},
+
+"alff":{
+    "analysis_dir":{
+        "brain":"/figures/f02_functional_sc/alff_inPAM50_nostd_oct25/brain/",
+        "spinalcord":"/figures/f02_functional_sc/alff_inPAM50_nostd_oct25/spinalcord/"},
+    "alff_freq_range": [0.01, 0.027], 
+    "frq_range": {
+        "slow5": [0.01, 0.027],
+        "slow4": [0.027, 0.073],
+        "slow3": [0.073, 0.08],
+        "low_frq": [0.01, 0.08]},
+    "TR": 1.55,
+    "template_space":{"brain":{"func":"/denoising/slice_wise/2_func_in_template/sub-{}/brain/*moco_nofilter_nostd_inT1w_inTemplate.nii.gz",
+"func_mask":"/templates/MNI/MNI_GM_2mm.nii.gz"},
+    "spinalcord":{"func":"/denoising/slice_wise/2_func_in_template/sub-{}/spinalcord/*moco_nofilter_nostd_inTemplate.nii.gz",
+    "func_mask":"/templates/PAM50/template/PAM50_cord_C1C7_alff.nii.gz"}}},
+
+
+"PAM50_space":{
+    "spinalcord":{
+    "alff":"/figures/f02_functional_sc/alff_inPAM50_oct25/spinalcord/slow5/first_level/nifti/*s_Z.nii.gz"}},
+    
+       
+"labels_VD":{"ventral":["RV","LV"],"dorsal":["RD","LD"]},
+"labels_RL":{"right":["RV","RD"],"left":["LV","LD"]},
+"labels1":{"ventral":["RV","LV"],"dorsal":["RD","LD"],"right":["RV","RD"],"left":["LV","LD"],"cross1":["LV","RD"],"cross2":["RV","LD"]},
+"labels2":{"ventral":["ventral"],"dorsal":["dorsal"],"within":["right","left"],"cross":["cross1","cross2"]},
+"level_labels":{"C1":["C1"],"C2":["C2"],"C3":["C3"],"C4":["C4"],"C5":["C5"],"C6":["C6"],"C7":["C7"]},
+"labels_RL_brain":{"right":["RH"],"left":["LH"]},
+"labels1_brain":{"cortical":["_Vis_","_SomMot_","_DorsAttn_","_VentAttn_","_Limbic_","_Cont_"],"subcortical":["_Cerebellum_","_Subcortical_"]},
+"labels3_brain":{"ventral":[""],"dorsal":[""]},
+"network_labels":{"Visuel":["Vis"],"SomMot":["SomMot"],"Default":["Default"],"S1":["S1"],"M1":["M1"],"DorsAttn":["_DorsAttn_"],"VentAttn":["VentAttn"],"Limbic":["Limbic"],"Control":["Cont"],"Cereb":["_Cerebellum_"],"SubCx":["_Subcortical_"]},
+
+    
+    
+"population_infos":"/2025_brsc_aging_project/config/participants_brsc_aging.tsv",
+
+"participants_IDs_ALL":["A001","A003","A004","A005","A006","A007","A008","A009","A010","A011","A012","A013","A015","A016","A017","A019","A020","A021","A023","A024","A025","A026","A027","A028","A029","A030","A032","A033","A034","A035","A036","A037","A038","A039","A043","A044","A045","A046","A047","A048","A049","A050","A051","A052","A054","A056","A058","P028","P030","P031","P033","P043","P047","P049","P050","P057","P089","P094","P096","P098","P099","P100","P104","P105","P106","P108","P109"],
+
+"participants_IDs_ALL2":["A001","A003","A004","A005","A006","A007","A008","A009","A010","A011","A012","A013","A015","A016","A017","A019","A020","A021","A023","A024","A025","A026","A027","A028","A029","A030","A032","A033","A034","A035","A036","A037","A038","A039","A043","A044","A045","A046","A047","A048","A049","A050","A051","A052","A054","A056","A058","P028","P030","P031","P033","P043","P047","P049","P050","P057","P089","P094","P096","P098","P099","P100","P104","P105","P106","P108","P109"],
+
+"participants_IDs_YA":["P030","P099","A006","A007","A008","A009","A023","A024","A025","A027","A028","A030","A032","A033","A034","A036","A037","A038","A043","A044","A046","A048","A050","A051","A052"],
+"participants_IDs_MA":["P028","P047","P050","P108","P109","A001","A005","A011","A013","A016","A020","A021","A026","A029","A035","A039","A045","A047","A049","A054","A056","A058"],
+"participants_IDs_OA":["P031","P033","P043","P049","P057","P089","P094","P096","P098","P100","P104","P105","P106","A003","A004","A010","A012","A015","A017","A019"]
+} 

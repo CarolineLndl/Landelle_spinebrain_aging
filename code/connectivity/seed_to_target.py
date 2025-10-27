@@ -345,12 +345,409 @@ class Seed2target:
             ts_zmean=np.load(ts_txt + '_zmean.npy',allow_pickle=True)
 
         return ts_zmean
-
     
-   
+    def correlation_df(self,seed_dict,target_dict,labels_list=None,scaling_method="zscore",partial_ts=None,groups=None,labels=None,population_info=None,tag="",save_maps=True,mean=False,smoothing_output=None,redo=False,n_jobs=1):
+        '''
+        Compute correlation between two seeds (seed2seed)
+        Inputs
+        ----------
+        seed_ts: dict
+            dictionnary that combined timecourse of all input seeds (see extract_data method). It could be the mean or the PC for exemple
+            seed_dict=["my_seedname1":[1,-1,2,3],"my_seedname2":[-1,-4,3,4]]
+        target_dict: dict
+            dictionnary that combined timecourse of all input seeds (see extract_data method). It could be the mean or the PC for exemple 
+            seed_dict=["my_seedname1":[1,-1,2,3],"my_seedname2":[-1,-4,3,4]]
+        norm: bool
+            If True, the time series will be normalized (z-scored) before computing the correlation.
+        
+        partial_ts: list
+           List of time series to remove from the target signal (one per participant) (default = None)
+
+        redo: boolean
+            to rerun the analysis
+        njobs: int
+            number of jobs for parallelization
+    
+        Output
+        ----------
+        correlations: df
+
+        '''
+
+        results=[]
+
+        # select info about the population
+        if population_info is None:
+            population_info=self.config["project_dir"]+ self.config["population_infos"]
+        population_info_df=pd.read_csv(population_info,delimiter='\t')
+
+        # Compute correlation
+        output_indiv_file=[];matrix_indiv_file=[]
+        
+        #Create output directory
+        output_indiv_dir=self.outputdir+"/1_first_level/correlation/"
+        os.makedirs(output_indiv_dir, exist_ok=True)
+
+        for ID in self.IDs:
+            output_indiv_file.append(output_indiv_dir+ "/sub-" + ID + "_"+self.kind+"_df" + tag)
+            matrix_indiv_file.append(output_indiv_dir+ "/sub-" + ID + "_"+self.kind+"_matrix" + tag)
+            if partial_ts==None:
+                partial_ts = [None] * len(self.IDs)
+
+        # individual analysis
+        if labels_list is not None and len(self.structure)==1:
+            seed_names =labels_list
+            target_names=labels_list
+        elif len(self.structure)>1:
+            #concatenate self.seed_names array and self.target_names array
+            seed_names = np.concatenate((self.seed_names, self.target_names))
+            target_names = np.concatenate((self.seed_names, self.target_names))
+        else:
+            seed_names = self.seed_names
+            target_names = self.target_names
+        
+        if not os.path.exists(output_indiv_file[0] + ".csv") or redo==True:
+            for seed_nb, seed_name in enumerate(seed_names):
+                seed_name=seed_names[seed_nb]
+                for target_nb, target_name in enumerate(target_names):
+                    correlations = Parallel(n_jobs=n_jobs)(delayed(self._compute_connectivity)(
+                        ID_nb, 
+                        seed_dict[seed_name][ID_nb],
+                        target_dict[target_name][ID_nb],
+                        "seed2seed",
+                        self.kind,
+                        partial_ts[ID_nb],
+                        True)
+                    for ID_nb in range(len(self.IDs)))
+                    
+                    
+                    for ID_nb, ID in enumerate(self.IDs):# Append the result as a dictionary
+                        # note that the same pair is saved twice, once as seed1-seed2 and once as seed2-seed1
+                        if seed_name == target_name:
+                            correlations[ID_nb] = np.nan
+                        results.append({
+                        'IDs':ID,
+                        'group': population_info_df[population_info_df["participant_id"] == ID]["group"].values[0],
+                        'age': population_info_df[population_info_df["participant_id"] == ID]["age"].values[0],
+                        'sex': population_info_df[population_info_df["participant_id"] == ID]["sex"].values[0],
+                        "seed1": seed_name,
+                        "seed2": target_name,
+                        'corr': correlations[ID_nb],
+                        'fcorr':np.nan,
+                        'zfcorr':np.nan
+                        })
+                        
+
+            # Create dataframe_______________________________________
+            df = pd.DataFrame(results) 
+
+
+            for ID_nb, ID in enumerate(self.IDs):# Append the result as a dictionary
+                indiv_df= df[df['IDs'] == ID].copy() # Filter the dataframe for the current ID
+                indiv_df['edge_sorted'] = indiv_df.apply(lambda row: tuple(sorted([row['seed1'], row['seed2']])), axis=1) # unique pair of seeds identification
+                df_unique = indiv_df.drop_duplicates(subset='edge_sorted')[['edge_sorted', 'corr']].copy() # remove duplicates based on the sorted pairs, keep first occurrence
+                corr = df_unique['corr'].values # Extract correlation values for this ID
+                fcorr = np.full_like(corr, np.nan, dtype=np.float64) # Initialize fcorr with NaNs
+                valid_mask = ~np.isnan(corr) & (np.abs(corr) < 1)
+                fcorr[valid_mask] = np.arctanh(corr[valid_mask]) # Compute Fisher z-transform for valid correlations
+
+                zcorr_zscored = np.full_like(corr, np.nan, dtype=np.float64) # Initialize zcorr_zscored with NaNs
+                valid_mask = ~np.isnan(corr) & (np.abs(corr) < 1)
+                zcorr_zscored[valid_mask] = zscore(corr[valid_mask])
+
+                
+
+                df_unique['fcorr'] = fcorr # Update the 'fcorr' column in the dataframe
+                df_unique['zfcorr'] = zcorr_zscored # Update the 'z
+                edge_to_zfcorr = dict(zip(df_unique['edge_sorted'], df_unique['zfcorr']))
+                edge_to_fcorr = dict(zip(df_unique['edge_sorted'], df_unique['fcorr']))
+                indiv_df['fcorr'] = indiv_df['edge_sorted'].map(edge_to_fcorr)
+                indiv_df['zfcorr'] = indiv_df['edge_sorted'].map(edge_to_zfcorr)
+                
+
+                # Store results in dataframe
+                df.loc[df['IDs'] == ID, 'fcorr'] = indiv_df['fcorr']
+                df.loc[df['IDs'] == ID, 'zfcorr'] = indiv_df['zfcorr']
+        
+            if labels:
+                if self.structure[0]=="spinalcord":
+                    df['labels1'] = df.apply(lambda row: self._assign_labels1(row["seed2"], row["seed1"], self.config["labels1"]), axis=1)
+                    df['labels2'] = self._assign_labels2(df, self.config["labels2"])# Add the labels2 column based on labels1
+                    df['seed_level'] = df["seed1"].str.extract(r'C(\d+)').astype(float) #Extract the levels after "PAM50_C" in both seed_names and target_names
+                    df['target_level'] = df["seed2"].str.extract(r'C(\d+)').astype(float)
+                    df['distance_labels'] = df.apply(lambda row: "null" if row['labels1'] == "null" else abs(row['seed_level'] - row['target_level']), axis=1) # Calculate the absolute difference between the levels
+                    df['level_labels'] = df.apply(lambda row: self._assign_labels1(row["seed2"], row["seed1"], self.config["level_labels"]), axis=1)
+                    df = df.drop(columns=['seed_level', 'target_level']) # Drop the helper columns if needed
+                    df['betwith_labels'] = df.apply(lambda row: 'intra' if row['level_labels'] != "null" and row['labels1'] != "null" 
+                                else ('inter' if row['level_labels'] == "null" and row['labels1'] != "null" else "null"), axis=1)
+                
+                
+                elif self.structure[0]=="brain":
+                    df['right_left'] = df.apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["labels_RL_brain"]), axis=1)
+                    df['ventro_dorsal'] =df.apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["labels3_brain"]), axis=1)
+                    df['structure'] = df.apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["labels1_brain"]), axis=1)
+                    df['networks'] = df.apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["network_labels"]), axis=1)
+                    df['betwith_labels'] = df.apply(lambda row: 'null' if np.isinf(row['corr']) else ('intra' if row['networks'] != "null" else 'inter'), axis=1)
+
+            # transform the df into a matrix:
+            
+            mat=[]
+            for ID_nb, ID in enumerate(self.IDs):
+                matrix=df[df["IDs"]==ID].pivot_table(
+                 index="seed1", 
+                 columns="seed2", 
+                 values="fcorr", 
+                 sort=False  )# preserve original label order
+                
+                
+                # save individual dataframe
+                mat.append(matrix.to_numpy())
+                df_indiv=df[df["IDs"]==ID]
+                df_indiv.to_csv(output_indiv_file[ID_nb] + ".csv", index=False)
+                pd.DataFrame(mat[ID_nb]).to_csv(matrix_indiv_file[ID_nb] + ".csv", index=False, header=False)
+
+                #save the half matrix
+                df_copy = df_indiv.copy()
+                df_copy["seed1"] = df_copy["seed1"].astype(str)
+                df_copy["seed2"] = df_copy["seed2"].astype(str)
+                df_copy['pair'] = df_copy.apply(lambda row: tuple(sorted([row["seed1"], row["seed2"]])), axis=1)
+                df_upper = df_copy.drop_duplicates(subset=['IDs', 'pair'])
+                df_upper = df_upper[df_upper["seed1"] != df_upper["seed2"]]
+                df_upper = df_upper.drop(columns='pair')
+                pd.DataFrame(df_upper).to_csv(output_indiv_file[ID_nb] + "_half.csv", index=False, header=True)
+
+        else:
+            for ID_nb, ID in enumerate(self.IDs):
+                df_indiv=pd.read_csv(output_indiv_file[ID_nb] + ".csv")
+                df_indiv_half=pd.read_csv(output_indiv_file[ID_nb] + "_half.csv")
+
+       
+        # group level analysis ___________________________
+        #load indiv cvs files
+        if groups:
+            df_indiv = [pd.read_csv(file + ".csv") for file in output_indiv_file]  # Load each CSV into a DataFrame and store them in a list
+            df_indiv_concat = pd.concat(df_indiv, axis=0)  # Concatenate the DataFrames horizontally
+            df_indiv_half = [pd.read_csv(file + "_half.csv") for file in output_indiv_file]  # Load each CSV into a DataFrame and store them in a list
+            df_indiv_concat_half = pd.concat(df_indiv_half, axis=0)  # Concatenate the DataFrames horizontally
+            
+            #Calculate the mean and st df over the individuals
+            mean_df={}
+            std_df={}
+            df_group_concat={}
+            df_group_concat_half={}
+
+            for group in groups + ['ALL']:  # Add 'all' condition that will regroup all groups
+                if group == 'ALL':
+                    df_selected = df_indiv_concat
+                    df_selected_half = df_indiv_concat_half
+                else:
+                    df_selected = df_indiv_concat[df_indiv_concat['group']==group]
+                    df_selected_half = df_indiv_concat_half[df_indiv_concat_half['group']==group]
+
+                df_group_concat[group] = df_selected
+                df_group_concat_half[group] = df_selected_half
+                
+                mean_df[group] = df_selected.groupby(["seed1", "seed2"], as_index=False,sort=False)[['corr','fcorr','zfcorr']].mean() # calculate the mean, sort=False ensure no alphabeticcal reordering
+                std_df[group] =  df_selected.groupby(["seed1", "seed2"], as_index=False,sort=False)[['corr','fcorr','zfcorr']].std() # calculate std
+
+
+                if labels:
+                    if self.structure[0]=="spinalcord":
+                        mean_df[group]['labels1'] = mean_df[group].apply(lambda row: self._assign_labels1(row["seed2"], row["seed1"], self.config["labels1"]), axis=1)
+                        mean_df[group]['labels2'] = self._assign_labels2(mean_df[group], self.config["labels2"])# Add the labels2 column based on labels1
+                        mean_df[group]['level_labels'] = mean_df[group].apply(lambda row: self._assign_labels1(row["seed2"], row["seed1"], self.config["level_labels"]), axis=1)
+                        mean_df[group]['betwith_labels'] = mean_df[group].apply(lambda row: 'intra' if row['level_labels'] != "null" and row['labels1'] != "null" 
+                                    else ('inter' if row['level_labels'] == "null" and row['labels1'] != "null" else "null"), axis=1)
+                        mean_df[group]['seed_level'] = mean_df[group]["seed1"].str.extract(r'PAM50_C(\d+)').astype(float) #Extract the levels after "PAM50_C" in both seed_names and target_names
+                        mean_df[group]['target_level'] = mean_df[group]["seed2"].str.extract(r'PAM50_C(\d+)').astype(float)
+                        mean_df[group]['distance_labels'] = mean_df[group].apply(lambda row: "null" if row['labels1'] == "null" else abs(row['seed_level'] - row['target_level']), axis=1) # Calculate the absolute difference between the levels
+                        mean_df[group] = mean_df[group].drop(columns=['seed_level', 'target_level']) # Drop the helper columns if needed
+                
+                    elif self.structure[0]=="brain":
+                        mean_df[group]['right_left'] =  mean_df[group].apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["labels_RL_brain"]), axis=1)
+                        mean_df[group]['ventro_dorsal'] = mean_df[group].apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["labels3_brain"]), axis=1)
+                        mean_df[group]['structure'] =  mean_df[group].apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["labels1_brain"]), axis=1)
+                        mean_df[group]['networks'] =  mean_df[group].apply(lambda row: util.assign_labels3(row["seed2"], row["seed1"], self.config["network_labels"]), axis=1)
+
+                        mean_df[group]['betwith_labels'] = mean_df[group].apply(lambda row: 'null' if np.isinf(row['corr']) else ('intra' if row['networks'] != "null" else 'inter'), axis=1)
+
+                        
+                # save group dataframe
+                output_group_dir=self.outputdir+"/2_second_level/correlation/"
+                os.makedirs(output_group_dir, exist_ok=True)
+                
+                
+                if group == 'ALL':
+                    group_tag=''
+                    ID_nb=len(self.IDs)
+                else:
+                    group_tag='_'+group
+                    ID_nb=len(self.config['participants_IDs' + group_tag])
+                output_concat_file=output_group_dir+ "/n" + str(ID_nb) + "_"+self.kind+"_concat_df_" +group+ tag 
+                output_mean_file=output_group_dir+ "/n" + str(ID_nb) + "_"+self.kind+"_mean_df_" +group+ tag + ".csv"
+                output_std_file=output_group_dir+ "/n" + str(ID_nb) + "_"+self.kind+"_std_df_" +group+ tag + ".csv"
+        
+                if not os.path.exists(output_concat_file) or redo==True:
+                    df_group_concat[group].to_csv(output_concat_file+ ".csv", index=False)
+                    if group == 'ALL':
+                        df_group_concat_half[group].to_csv(output_concat_file+ "_half.csv", index=False)
+                   
+                    mean_df[group].to_csv(output_mean_file, index=False)
+                    std_df[group].to_csv(output_std_file, index=False)
+
+                else:
+                    df_group_concat[group]=pd.read_csv(output_concat_file + ".csv")
+                    mean_df[group]=pd.read_csv(output_mean_file)
+                    std_df[group]=pd.read_csv(output_std_file)
+                
+                
+
+        
+        
+        return df_group_concat,df_group_concat_half, mean_df 
+    
+
+
+    def _compute_connectivity(self,subject_nb,seed_ts,target_ts,method,kind,partial_ts,df):
+
+
+        '''
+        # for l1regress we used  sklearn
+        # https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso.html
+        Run the correlation analyses.
+        Normalized the coef value, Fisher transformation for correlation  or not  (norm == False)
+        The correlation could be classical correlations (partial==False) or partial correlations (partial==True)
+        For the partial option:
+        > 1. we calculated the first derivative of the signal (in each voxel of the target)
+        > 2. the derivative is used as a covariate in pg.partial_corr meaning that the derivative is remove for the target but no seed signal (semi-partial correlation)
+        side: "positive" , "negative" or "two-sided"
+            Whether unilateral or bilateral matrice should be provide default: "two-sided"
+            if "positive" : all negative values will be remplace by 0 values
+        Inputs
+        ----------
+        subject_nb: int
+            the number of the subject in the list of subjects
+        seed_ts: array
+            the time series of the seed (n_volume, n_voxels)
+        target_ts: array
+            the time series of the target (n_volume, n_voxels)
+        method: str
+            the method to use for the connectivity analysis, could be "seed2voxels" or "seed2seed"
+        kind: str
+            the kind of connectivity analysis to run, could be "corr", "cov", "l1regress", "dtw", "mi", "pcorr" or "pcorr_ts"
+        partial_ts: array
+            the time series of the partial covariate (n_volume, n_voxels) if kind is "pcorr_ts"
+        norm: boolean
+            if True the connectivity values will be normalized (e.g. Fisher transformation for correlation)
+        df: boolean
+            if True the connectivity values will be returned as a DataFrame, else as a numpy array
+
+       '''
+
+
+        if method=="seed2voxels":
+            seed_to_voxel_connectivity = np.zeros((target_ts.shape[1], 1)) # np.zeros(number of voxels,1)
+            for v in range(0,target_ts.shape[1]):
+                #print(v)
+                if kind=='corr': # run correlation
+                    seed_to_voxel_connectivity[v] = np.corrcoef(seed_ts, target_ts[:, v])[0, 1]
+                
+            
+                elif kind=='cov': # run covariance
+                    seed_to_voxel_connectivity[v] = np.cov(seed_ts, target_ts[:, v])[0, 1]
+                
+                elif kind=='l1regress': # linear regression with L1 prior
+                    lasso_mod   = Lasso(alpha=0.001,fit_intercept = False)
+                    reg_sk      = lasso_mod.fit(seed_ts.reshape(-1, 1), target_ts[:, v])
+                    seed_to_voxel_connectivity[v] = reg_sk.coef_
+                
+                elif kind=='dtw': # run distance time warping, add normalization to the distance path
+                    #seed_to_voxel_connectivity[v] = dtw.distance(seed_ts.reshape(-1, 1), target_ts[:, v],window=60)
+                    
+                    seed_to_voxel_connectivity[v] = dtw.distance_fast(seed_ts.reshape(-1, 1).flatten().astype(np.float64), target_ts[:, v].astype(np.float64), window=60) # calculate the DTW between the two timeseries
+                    #path = dtw.warping_path_fast(seed_ts.reshape(-1, 1).flatten(), target_ts[:, v].astype(np.float64), window=60) # Extract the optimal warping path 
+                    #ix, iy = zip(*path) # provide the specific matching points from both time series
+                    #seed_to_voxel_connectivity[v]=seed_to_voxel_connectivity[v]/len(ix) #Normalize the DTW distance by dividing by the length of the warping path
+                    #paths=[]
+                
+                elif kind=='mi': # run mutual information calculation
+                    seed_to_voxel_connectivity[v] =mutual_info_regression(seed_ts.reshape(-1, 1), target_ts[:, v].ravel())
+
+
+                
+                elif kind== 'pcorr': # run partial correlation
+                    target_derivative = np.zeros((target_ts.shape[0]-1, target_ts.shape[1])) # np.zeros(number of voxels,1)
+                    for v in range(0,target_ts.shape[1]-1): 
+                        target_derivative[:,v] = np.diff(target_ts[:, v]) # calculate the first derivative of the signal
+                        df={'seed_ts':seed_ts[:-1],'target_ts':target_ts[:-1, v],'target_ts_deriv':target_derivative[:,v]}
+                        df=pd.DataFrame(df) # transform in DataFrame for pingouiun toolbox
+                        seed_to_voxel_correlations[v]=pg.partial_corr(data=df, x='seed_ts', y='target_ts', y_covar='target_ts_deriv').r[0] # compute partial correlation and extract the r 
+                
+                
+
+
+        elif method=="seed2seed":
+            seed_to_voxel_connectivity=[]
+            if kind=='corr':
+                if df ==False:
+                    seed_to_voxel_connectivity = np.corrcoef(seed_ts.T, target_ts.T)
+                    np.fill_diagonal(seed_to_voxel_connectivity, np.nan)
+                    
+                else:
+                    r=np.corrcoef(seed_ts, target_ts)[0, 1]
+                    #if r >= 1:
+                       #r = np.nan
+                    seed_to_voxel_connectivity=r
+
+
+            elif kind=='cov':
+                seed_to_voxel_connectivity = np.cov(seed_ts, target_ts)[0, 1]
 
    
+            elif kind== 'pcorr': # run partial correlation with specifyed ts
+                
+                if np.array_equal(seed_ts, target_ts):
+                    seed_to_voxel_connectivity = np.nan # if the seed and target are the same, we cannot compute a partial correlation
+                else:
+                    seed_ts = np.array(seed_ts)
+                    target_ts = np.array(target_ts)
+                    df={'seed_ts':seed_ts,'target_ts':target_ts,'partial_ts':partial_ts}
+                    df=pd.DataFrame(df) # transform in DataFrame for pingouiun toolbox
+                    seed_to_voxel_connectivity =pg.partial_corr(data=df, x='seed_ts', y='target_ts', y_covar='partial_ts').r.iloc[0] # compute partial correlation and extract the r 
 
+                                                   
+                    
+        return  seed_to_voxel_connectivity
+   
+    def _assign_labels1(self,target, seed, conditions):
+        '''
+        #Create the 'class1' column based on the combination of 'masks' and 'seeds'
+        '''
+        # Check if mask and seed are the same
+        if target == seed:
+            return "null"
+
+        # Iterate through the conditions and check for patterns in mask and seed
+        for class_name, patterns in conditions.items():
+            if any(pattern in target for pattern in patterns) and any(pattern in seed for pattern in patterns):
+                return class_name
+
+        return "null"  # Return "None" if no conditions match
+
+    def _assign_labels2(self,df, conditions_class2):
+        '''
+    Assign the class2 column based on the class1 column and the conditions provided for class2.
+    
+    Parameters:
+    df (DataFrame): The dataframe that contains a 'class1' column.
+    conditions_class2 (dict): A dictionary containing the mapping for class2 based on class1.
+    
+    Returns:
+    DataFrame: The dataframe with an additional 'class2' column.
+        '''
+        # Create class2 column based on the conditions from class1
+        return df['labels1'].apply(lambda x:next((key for key, values in conditions_class2.items() if x in values), "null"))
+        #df['class2'] = df['class1'].apply(lambda x: next((key for key, values in conditions_class2.items() if x in values), None))
             
         """
         Computes mean within-system and between-system correlations and calculates 

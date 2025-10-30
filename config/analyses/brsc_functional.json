@@ -33,8 +33,8 @@
 
 "seed2seed":{
     "analysis_dir":{
-        "brain":"/figures/f02_functional_sc/seed2seed_oct25/brain/schaefer200_cobra/",
-        "spinalcord":"/figures/f02_functional_sc/seed2seed_oct25/spinalcord/"},
+        "brain":"/figures/f02_functional_sc/preprint2025/seed2seed/brain/schaefer200_cobra/",
+        "spinalcord":"/figures/f02_functional_sc/preprint2025/seed2seed/spinalcord/"},
     "TR": 1.55,
     "seeds":{"brain":{
         "atlas_dir":"/templates/MNI/atlas/",
@@ -48,10 +48,10 @@
 
 
 "ts_features":{
-    "analysis_dir":{"spinalcord":"/figures/f02_functional_sc/features/sc_oct25/spinalcord/",
-"brain":"/figures/f02_functional_sc/features/sc_oct25/brain/schaefer200_cobra/"},
-    "ts_files":{"spinalcord":"/figures/f02_functional_sc/seed2seed/sc_oct25/spinalcord/first_level/timeseries/sub{}_spinalcord_timeseries_zmean.npy",
-"brain":"/figures/f02_functional_sc/seed2seed/sc_oct25/brain/first_level/timeseries/sub{}_brain_timeseries_zmean.npy"},
+    "analysis_dir":{"spinalcord":"/figures/f02_functional_sc/preprint2025/features/spinalcord/",
+"brain":"/figures/f02_functional_sc/preprint2025/features/brain/schaefer200_cobra/"},
+    "ts_files":{"spinalcord":"/figures/f02_functional_sc/preprint2025/seed2seed/spinalcord/first_level/timeseries/sub{}_spinalcord_timeseries_zmean.npy",
+"brain":"/figures/f02_functional_sc/preprint2025/seed2seed/brain/first_level/timeseries/sub{}_brain_timeseries_zmean.npy"},
 "seeds":{"brain":{
         "atlas_dir":"/templates/MNI/atlas/",
         "atlas_tag":"schaefer200_cobra"},
@@ -63,8 +63,8 @@
 
 "alff":{
     "analysis_dir":{
-        "brain":"/figures/f02_functional_sc/alff_inPAM50_nostd_oct25/brain/",
-        "spinalcord":"/figures/f02_functional_sc/alff_inPAM50_nostd_oct25/spinalcord/"},
+        "brain":"/figures/f02_functional_sc/preprint2025/alff/brain/",
+        "spinalcord":"/figures/f02_functional_sc/preprint2025/alff/spinalcord/"},
     "alff_freq_range": [0.01, 0.027], 
     "frq_range": {
         "slow5": [0.01, 0.027],

@@ -29,7 +29,7 @@ Most of the code was written in Python 3.10 and some analyses also were done in 
 - Func Denoising ✅    </br>
 - Fig 1 ✅    </br>
 - Fig 2 SpiDyn ✅  SpiFC ✅  coupling ✅ </br>
-- Fig 3 morpho-SpiFC (TBD) morpho-SpiDyn (TBD)</br>
+- Fig 3 morpho-SpiFC  ✅ morpho-SpiDyn  ✅</br>
 - Fig 4 (TBD)</br>
 - Suppl material</div>
 

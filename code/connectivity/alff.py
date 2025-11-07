@@ -317,6 +317,8 @@ class ALFF:
         
 
     # Utilities
+
+    # Utilities
     def _alff(self,data_main_dir,output_dir,mask_f,fwhm,scaling_method,redo):
         '''Compute alff map for one IDject
         The preprocessed timeseries should not be standardized, but the ALFF map will be standardized
@@ -369,6 +371,152 @@ class ALFF:
                 #Step4: Compute ALFF (square root of power spectrum, then averaged in low-freq range) 
                 alff_map = np.sqrt(np.nanmean(power_spectrum[..., f_mask_bp], axis=-1))
                 #alff_map = np.nan_to_num(alff_map, nan=0.0, posinf=0.0, neginf=0.0)# # Handle NaN and Inf values
+
+                # Step 5: Save the ALFF image
+                if self.analysis=='alff':
+                    img_alff = nib.Nifti1Image(alff_map, img.affine, img.header)
+                    nib.save(img_alff, output_dir + os.path.basename(data_main_dir).split('.')[0]  +output_tag+'.nii.gz')
+
+                if self.analysis=='falff':
+                    # Step 6: Compute total amplitude power (for fALFF) and save image
+                    f_mask_all = np.logical_and(freqs >= 0, freqs <= 0.25)  # Mask for all positive frequencies
+                    total_power = np.sum(power_spectrum[..., f_mask_all], axis=-1) # denominator for fALFF
+                    band_power = np.sum(power_spectrum[..., f_mask_bp], axis=-1) # numerator for fALFF
+
+                    #falff_map = np.divide(alff_map, total_power, out=np.zeros_like(alff_map), where=total_power != 0)
+                    #falff_map = np.divide(band_power, total_power, out=np.zeros_like(alff_map), where=total_power != 0)
+                    falff_map = np.divide(band_power, total_power)
+
+                    img_falff = nib.Nifti1Image(falff_map, img.affine, img.header)
+                    nib.save(img_falff, output_dir + os.path.basename(data_main_dir).split('.')[0]  +output_tag+'.nii.gz')
+
+
+
+                #clean the alff values by removing the outliers
+                #mean_alff = np.mean(alff[alff > 0])  # Exclude zeros
+                #std_alff = np.std(alff[alff > 0])  # Exclude zeros
+                #std_threshold = 2  # std threshold
+                #threshold_value = mean_alff - (std_threshold * std_alff) # Create a mask to exclude values below mean - (std_threshold * std)
+                #mask_low_std = alff >= threshold_value  # Keep values above threshold
+                #alff = alff * mask_low_std# Apply the mask to remove low ALFF values
+
+            else:
+                raise Exception(f'Input file {data_main_dir}.nii.gz does not exist.')   
+              
+        # post- processing of alff images
+        if scaling_method=="zscore":
+            z_tag="_Z"
+        elif scaling_method=="robust_sigmoid":
+            z_tag="_sig"
+
+        z_alff_f=output_dir + os.path.basename(data_main_dir).split('.')[0] + output_tag+ '_s'+z_tag+'.nii.gz'
+        if not os.path.exists(z_alff_f) or redo:
+            ###Smooth image
+            alff_f=output_dir + os.path.basename(data_main_dir).split('.')[0] + output_tag+".nii.gz"
+            alff_smoothed=output_dir + os.path.basename(data_main_dir).split('.')[0] + output_tag+'_s.nii.gz'
+            smoothed_image=smooth_img(imgs=alff_f,
+            fwhm=fwhm)
+            smoothed_image.to_filename(alff_smoothed)
+
+            ### compute alff Z-score
+            data = nib.load(alff_smoothed).get_fdata()
+            masked_data = data[~np.isnan(data)]  # Keep only finite values
+            mean = np.mean(masked_data)
+            std = np.std(masked_data)
+            med = np.nanmedian(masked_data)
+            scale = iqr(masked_data, nan_policy='omit') / 1.35  # Approximate std
+            print(scale)
+            z_alff_f = output_dir + os.path.basename(data_main_dir).split('.')[0] + output_tag+ '_s'+z_tag+'.nii.gz'
+            alff_img = nib.load(alff_f)#'_masked.nii.gz')
+            if scaling_method=="zscore":
+                z_alff_img = math_img("(img - {}) / {}".format(mean, std), img=alff_img)
+
+            elif scaling_method=="robust_sigmoid":
+                z_alff_img = math_img("1 / (1 + np.exp(-(img - {}) / {}))".format(med, scale), img=alff_img)
+
+
+
+            z_alff_img.to_filename(z_alff_f) #'_masked_Z.nii.gz')
+            os.remove(alff_smoothed)
+
+
+            # change nan in the image to 0
+            for img in [alff_f, z_alff_f]:
+                str_mask = 'fslmaths ' + img+ ' -nan '+  img
+                os.system(str_mask)
+
+            
+        return alff_f, z_alff_f
+    
+
+        '''
+        Extracts csa
+        '''
+        
+        if not os.path.exists(o_file) or redo==True:
+            if method=="wa":
+                string="sct_extract_metric -i " + i_img +" -method " +method+  " -f " + mask_path + " -o "+o_file+ " -vert " + levels + " -vertfile " + level_img + " -perlevel 1" 
+            else :
+                string="sct_extract_metric -i " + i_img +" -method " +method+  " -f " + mask_path + " -l " + labels+ " -o "+o_file+ " -vert " + levels + " -vertfile " + level_img + " -perlevel 1" 
+                
+            os.system(string)
+            print(metric_tag + " was extracted for sub-" + ID)
+        
+        #elif verbose==True:
+                #print("CSA was already computed for sub-" + ID)
+
+        return o_file
+        '''Compute alff map for one IDject
+        The preprocessed timeseries should not be standardized, but the ALFF map will be standardized
+
+        Inputs
+        ----------
+        data_main_dir : str
+            Path to the image to flip (i.e., no suffix, no file extension)
+        
+        Outputs
+        ----------
+        data_main_dir_alff_pam50.nii.gz
+            ALFF image (i.e., std)
+        data_main_dir_alff_Z_pam50.nii.gz
+            Z-scored ALFF image
+        '''
+        output_tag = '_alff' if self.analysis=="alff" else '_falff'
+     
+        #Compute ALFF or fALFF
+        alff_f=output_dir + os.path.basename(data_main_dir).split('.')[0] +output_tag+'.nii.gz'
+        if (not os.path.isfile(output_dir + os.path.basename(data_main_dir).split('.')[0] +output_tag+'.nii.gz')) or redo :#or ((output_dir +os.path.basename(data_main_dir).split('.')[0]  +'_alff_Z.nii.gz')) or self.config['overwrite_alff_maps']: # If not already done or if we want to overwrite
+            
+            if os.path.isfile(data_main_dir):
+                # Load the data and define the frequency range of interest
+                img = nib.load(data_main_dir)
+                data = img.get_fdata()
+                N = data.shape[-1]  # Number of time points
+                if mask_f:
+                    mask_img = nib.load(mask_f)
+                    mask = mask_img.get_fdata() > 0  # Convert to boolean mask
+                    data[~mask] = np.nan  # Set non-masked regions to NaN
+
+                lowcut, highcut = self.config['alff']['alff_freq_range'] # Frequency range for ALFF computation
+                
+                # Step 1: detrend the data
+                masked_data = np.all(np.isfinite(data), axis=-1)
+                data_detrended = np.full_like(data, np.nan)
+                data_detrended[masked_data, :] = signal.detrend(data[masked_data, :], axis=-1)
+
+                # Step 2: Perform Fourier Transform along the time axis
+                fft_result = np.fft.fft(data_detrended, axis=-1)  # transform data to the frequency domain
+                amplitude_spectrum = np.abs(fft_result)  # Amplitude spectrum at each frequency
+                power_spectrum = amplitude_spectrum ** 2  # Power spectrum is obtained by squaring the amplitude spectrum at each frequency
+               
+
+                #Step3: Define frequency bins based on TR
+                freqs = np.fft.fftfreq(N, d=self.config['alff']['TR']) # Compute frequency bins based on TR
+                f_mask_bp = np.logical_and(freqs >= lowcut, freqs <= highcut)  # Band-pass mask
+
+                #Step4: Compute ALFF (square root of power spectrum, then averaged in low-freq range) 
+                alff_map = np.sqrt(np.nanmean(power_spectrum[..., f_mask_bp], axis=-1))
+                alff_map = np.nan_to_num(alff_map, nan=0.0, posinf=0.0, neginf=0.0)# # Handle NaN and Inf values
 
                 # Step 5: Save the ALFF image
                 if self.analysis=='alff':

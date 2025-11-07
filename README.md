@@ -30,8 +30,8 @@ Most of the code was written in Python 3.10 and some analyses also were done in 
 - Fig 1 ✅    </br>
 - Fig 2 SpiDyn, SpiFC, coupling ✅ </br>
 - Fig 3 morpho-SpiFC, morpho-SpiDyn ✅</br>
-- Fig 4 Brain/Spinal morpho   ✅, FC ✅, Dyn (TBD)</br>
-- Suppl material</div>
+- Fig 4 Brain/Spinal morpho   ✅, FC ✅, Dyn ✅</br>
+- Suppl material (TBD)</div>
 
 ---  
 ### Repository  

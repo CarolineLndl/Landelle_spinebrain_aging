@@ -271,7 +271,7 @@ class Statistics:
 
         return overall_stat,overall_p
     
-    def signed_partial_r2(self,df=None,y=None, predictor=None,covariates=None,random=None ):
+    def regression_model(self,df=None,y=None, predictor=None,covariates=None,random=None,n_bootstrap=None):
 
         """
 
@@ -280,6 +280,8 @@ class Statistics:
         y:       string, name of the columns for y (ex: "corr")
         predictor: string, name of the columns for dependent_var (main X, ex:e "age")
         covariates: list of string, name of the columns for covariates (additional covariate ex: ["sex"])
+        random: string or None, name of the column for random effect (ex: "subject_id") or None for no random effect
+        n_bootstrap: int or None, number of bootstrap samples to compute confidence intervals (None to skip)
         
         
         Returns:
@@ -301,58 +303,102 @@ class Statistics:
             
             # Case B: not binary numeric → categorical encoding
             else:
-                cat = pd.Categorical(df[cov])
-                codes = cat.codes
-                
+                cat = pd.Categorical(df[cov]).codes
                 df=df.copy()
-                df.loc[:,f'{cov}_bin'] = codes
+                df.loc[:,f'{cov}_bin'] = cat
             covariates_bin.append(f'{cov}_bin')
 
-        #print(df[['sex', 'sex_bin']].drop_duplicates())
         # full model
-        if random is None:
-            columns_needed = [y, predictor] + covariates_bin
-            df_clean = df[columns_needed].dropna()
+        def compute_model(df_sample):
+            if random is None:
+                columns_needed = [y, predictor] + covariates_bin
+                df_clean = df_sample[columns_needed].dropna()
+
+                X_full = sm.add_constant(df_clean[[predictor] + covariates_bin])
+                m_full = sm.OLS(df_clean[y], X_full).fit()
+
+                # reduced model
+                X_red  = sm.add_constant(df_clean[covariates_bin])
+                m_red  = sm.OLS(df_clean[y], X_red).fit()
+
+                # compute SS (residual sum of squares)
+                ss_full    = np.sum(m_full.resid ** 2)
+                ss_reduced = np.sum(m_red.resid ** 2)
+                partial_r2 = (ss_reduced - ss_full) / ss_reduced# partial R²
+                signed_r2 = np.sign(m_full.params[predictor]) * partial_r2# signed
+
+                # extract model parameters
+                p_val = m_full.pvalues[predictor]
+                beta  = m_full.params[predictor]
+                stat  = m_full.tvalues[predictor]
+                beta_cov  = m_full.params['sex_bin']
+                stat_cov  = m_full.tvalues['sex_bin']
+                p_cov  = m_full.pvalues['sex_bin']
             
-            X_full = sm.add_constant(df_clean[[predictor] + covariates_bin])
-            m_full = sm.OLS(df_clean[y], X_full).fit()
-
-            # reduced model
-            X_red  = sm.add_constant(df_clean[covariates_bin])
-            m_red  = sm.OLS(df_clean[y], X_red).fit()
         
+            else:
+                # Full model with random intercept for subject ID
+                formula_full = f"{y} ~ {predictor} + {' + '.join(covariates_bin)}"
+                m_full = smf.mixedlm(formula_full, df_sample, groups=df_sample[random]).fit()
+                
+                # Reduced model with random intercept for subject ID
+                formula_reduced = f"{y} ~ {' + '.join(covariates_bin)}"
+                m_red = smf.mixedlm(formula_reduced, df_sample, groups=df_sample[random]).fit()
+                signed_r2 = None
+
+                # extract model parameters
+                p_val = m_full.pvalues[predictor]
+                beta  = m_full.params[predictor]
+                stat  = m_full.tvalues[predictor]
+                beta_cov  = m_full.params['sex_bin']
+                stat_cov  = m_full.tvalues['sex_bin']
+                p_cov  = m_full.pvalues['sex_bin']
+            
+            return signed_r2, beta, p_val, stat, beta_cov, stat_cov, p_cov
+
+        if n_bootstrap is not None and random is None:  # Bootstrap currently only for OLS
+            signed_r2_list = []
+            beta_list = [];beta_cov_list=[]
+            p_list = []
+            stat_list = []
+            for _ in range(n_bootstrap):
+                df_sample = df.sample(n=len(df), replace=True)
+                sr2, beta, pval, stat, beta_cov , stat_cov , p_cov = compute_model(df_sample)
+                signed_r2_list.append(sr2)
+                beta_list.append(beta)
+                beta_cov_list.append(beta_cov)
+                p_list.append(pval)
+                stat_list.append(stat)
+
+            signed_r2 = np.median(signed_r2_list)
+            ci_r2 = np.percentile(signed_r2_list, [2.5, 97.5])
+            signed_r2_all = signed_r2_list
+
+            beta_age = np.median(beta_list)
+            ci_beta = np.percentile(beta_list, [2.5, 97.5])
+            beta_all = beta_list
+            beta_cov_all = beta_cov_list
+
+            stat_age = np.median(stat_list)
+            ci_stat = np.percentile(stat_list, [2.5, 97.5])
+            stat_all = stat_list
+
+            p_age = np.median(p_list)
+
         else:
-            # Full model with random intercept for subject ID
-            formula_full = f"{y} ~ {predictor} + {' + '.join(covariates_bin)}"
-            m_full = smf.mixedlm(formula_full, df, groups=df[random]).fit()
-
-            # Reduced model with random intercept for subject ID
-            formula_reduced = f"{y} ~ {' + '.join(covariates_bin)}"
-            m_red = smf.mixedlm(formula_reduced, df, groups=df[random]).fit()
-
-        # test significance of age
-        p_age = m_full.pvalues[predictor]
-        beta_age  = m_full.params[predictor]
-        stat_age  = m_full.tvalues[predictor]
-        beta_sex  = m_full.params['sex_bin']
-        stat_sex  = m_full.tvalues['sex_bin']
-        p_sex  = m_full.pvalues['sex_bin']
+            signed_r2, beta_age, p_age, stat_age, beta_cov, stat_cov, p_cov = compute_model(df)
+            ci_r2 = None
+            signed_r2_all = None
+            ci_beta = None
+            beta_all = None
+            ci_stat=None
+            stat_all=None
         
-        # compute SS
-        if random is None:
-            ss_full    = np.sum(m_full.resid ** 2)
-            ss_reduced = np.sum(m_red.resid ** 2)
-            ss_total   = np.sum((df[y] - df[y].mean())**2)
+        #return signed_r2, p_age, p_sex, beta_age, beta_sex, stat_age, stat_sex
+        return signed_r2, p_age, p_cov, beta_age, beta_cov, stat_age, stat_cov, ci_r2, signed_r2_all, ci_beta, beta_all, ci_stat, stat_all,beta_cov_all
 
-            # partial R²
-            partial_r2 = (ss_reduced - ss_full) / ss_total
 
-            # signed
-            signed_r2 = np.sign(beta_age) * partial_r2
-        else:
-            signed_r2 = "_"#m_full.rsquared - m_red.rsquared
-        
-        return signed_r2, p_age, p_sex, beta_age, beta_sex, stat_age, stat_sex
+
 
 
 class fMRI_Stats:

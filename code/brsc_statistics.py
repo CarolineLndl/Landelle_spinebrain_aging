@@ -289,31 +289,32 @@ class Statistics:
         p_val:     p-value for age term
         beta:      age coefficient
         """
-        # Check covariates are numerics:
-  
-        covariates_bin=[]
 
-        for cov in covariates:
-            s_num = pd.to_numeric(df[cov], errors='coerce')# Attempt to coerce to numeric
-            
-            # Case A: already binary numeric (e.g. 0/1 or 1/2)
-            unique_vals = set(s_num.dropna().unique())
-            if pd.api.types.is_numeric_dtype(s_num) and len(unique_vals) == 2:
-                df[f'{cov}_bin'] = s_num.astype(int)
-            
-            # Case B: not binary numeric → categorical encoding
-            else:
-                cat = pd.Categorical(df[cov]).codes
-                df=df.copy()
-                df.loc[:,f'{cov}_bin'] = cat
-            covariates_bin.append(f'{cov}_bin')
+        # Encode covariates
+        covariates_bin=[]
+        if covariates is not None:
+            for cov in covariates:
+                s_num = pd.to_numeric(df[cov], errors='coerce')# Attempt to coerce to numeric
+                
+                # Case A: already binary numeric (e.g. 0/1 or 1/2)
+                unique_vals = set(s_num.dropna().unique())
+                if pd.api.types.is_numeric_dtype(s_num) and len(unique_vals) == 2:
+                    df[f'{cov}_bin'] = s_num.astype(int)
+                
+                # Case B: not binary numeric → categorical encoding
+                else:
+                    cat = pd.Categorical(df[cov]).codes
+                    df=df.copy()
+                    df.loc[:,f'{cov}_bin'] = cat
+                covariates_bin.append(f'{cov}_bin')
 
         # full model
         def compute_model(df_sample):
+            """Fit the model and return coefficients and stats."""
             if random is None:
+                # OLS model
                 columns_needed = [y, predictor] + covariates_bin
                 df_clean = df_sample[columns_needed].dropna()
-
                 X_full = sm.add_constant(df_clean[[predictor] + covariates_bin])
                 m_full = sm.OLS(df_clean[y], X_full).fit()
 
@@ -328,15 +329,16 @@ class Statistics:
                 signed_r2 = np.sign(m_full.params[predictor]) * partial_r2# signed
 
                 # extract model parameters
-                p_val = m_full.pvalues[predictor]
+                p_value = m_full.pvalues[predictor]
                 beta  = m_full.params[predictor]
-                stat  = m_full.tvalues[predictor]
+                t_value  = m_full.tvalues[predictor]
                 beta_cov  = m_full.params['sex_bin']
-                stat_cov  = m_full.tvalues['sex_bin']
+                t_cov  = m_full.tvalues['sex_bin']
                 p_cov  = m_full.pvalues['sex_bin']
             
         
             else:
+                # Mixed model
                 # Full model with random intercept for subject ID
                 formula_full = f"{y} ~ {predictor} + {' + '.join(covariates_bin)}"
                 m_full = smf.mixedlm(formula_full, df_sample, groups=df_sample[random]).fit()
@@ -347,55 +349,50 @@ class Statistics:
                 signed_r2 = None
 
                 # extract model parameters
-                p_val = m_full.pvalues[predictor]
+                p_value = m_full.pvalues[predictor]
                 beta  = m_full.params[predictor]
-                stat  = m_full.tvalues[predictor]
+                t_value  = m_full.tvalues[predictor]
                 beta_cov  = m_full.params['sex_bin']
-                stat_cov  = m_full.tvalues['sex_bin']
+                t_cov  = m_full.tvalues['sex_bin']
                 p_cov  = m_full.pvalues['sex_bin']
             
-            return signed_r2, beta, p_val, stat, beta_cov, stat_cov, p_cov
+            return signed_r2, beta, p_value, t_value, beta_cov, t_cov, p_cov
 
-        if n_bootstrap is not None and random is None:  # Bootstrap currently only for OLS
-            signed_r2_list = []
-            beta_list = [];beta_cov_list=[]
-            p_list = []
-            stat_list = []
+        if n_bootstrap is not None :  
+            signed_r2_list, beta_list, beta_cov_list = [], [], []
+
             for _ in range(n_bootstrap):
-                df_sample = df.sample(n=len(df), replace=True)
-                sr2, beta, pval, stat, beta_cov , stat_cov , p_cov = compute_model(df_sample)
+                if random is None:
+                    # OLS: resample rows with replacement
+                    df_sample = df.sample(n=len(df), replace=True)
+                else:
+                    # Mixed model: resample groups (subjects) with replacement
+                    unique_groups = df[random].unique()
+                    sampled_groups = np.random.choice(unique_groups, size=len(unique_groups), replace=True)
+                    df_sample = pd.concat([df[df[random] == group] for group in sampled_groups])
+
+                sr2, beta, _, _, beta_cov , _ , _ = compute_model(df_sample)
                 signed_r2_list.append(sr2)
                 beta_list.append(beta)
                 beta_cov_list.append(beta_cov)
-                p_list.append(pval)
-                stat_list.append(stat)
 
-            signed_r2 = np.median(signed_r2_list)
-            ci_r2 = np.percentile(signed_r2_list, [2.5, 97.5])
-            signed_r2_all = signed_r2_list
-
-            beta_age = np.median(beta_list)
+            # Compute percentile CIs
+            ci_r2 = np.percentile(signed_r2_list, [2.5, 97.5]) if signed_r2_list[0] is not None else None
             ci_beta = np.percentile(beta_list, [2.5, 97.5])
-            beta_all = beta_list
-            beta_cov_all = beta_cov_list
+            ci_beta_cov = np.percentile(beta_cov_list, [2.5, 97.5])
 
-            stat_age = np.median(stat_list)
-            ci_stat = np.percentile(stat_list, [2.5, 97.5])
-            stat_all = stat_list
+            # Compute original OLS as point estimate
+            signed_r2, beta, p_value, t_value, beta_cov, t_cov, p_cov = compute_model(df)
 
-            p_age = np.median(p_list)
+
 
         else:
-            signed_r2, beta_age, p_age, stat_age, beta_cov, stat_cov, p_cov = compute_model(df)
+            signed_r2, beta, p_value, t_value, beta_cov, t_cov, p_cov = compute_model(df)
             ci_r2 = None
-            signed_r2_all = None
             ci_beta = None
-            beta_all = None
-            ci_stat=None
-            stat_all=None
+            ci_beta_cov = None
         
-        #return signed_r2, p_age, p_sex, beta_age, beta_sex, stat_age, stat_sex
-        return signed_r2, p_age, p_cov, beta_age, beta_cov, stat_age, stat_cov, ci_r2, signed_r2_all, ci_beta, beta_all, ci_stat, stat_all,beta_cov_all
+        return signed_r2, p_value, p_cov, beta, beta_cov, t_value, t_cov, ci_r2, ci_beta, ci_beta_cov
 
 
 

@@ -455,7 +455,7 @@ class Plotting:
                 y=y_data_f, 
                 data=df,  
                 kind="box",  
-                linewidth=2, 
+                linewidth=5, 
                 palette=palette,  # Use the provided palette
                 medianprops=dict(color="white"),  # Set median line color to white
                 hue=hue, 
@@ -525,7 +525,7 @@ class Plotting:
                     height,  # Height
                     fill=False,  # No fill for the outline
                     edgecolor=color,  # Same color as the box
-                    lw=1.5,  # Line width
+                    lw=5,  # Line width
                     alpha=0.7  # Set alpha for transparency of the outline
                 )
                 ax.add_patch(outline)  # Add the outline to the axis
@@ -543,7 +543,7 @@ class Plotting:
                     hue_order=hue_order,
                     palette=indiv_color,
                     size=5, 
-                    linewidth=0.5, 
+                    linewidth=1, 
                     alpha=0.6,jitter=0.25,
                     edgecolor='white'
                 )
@@ -554,9 +554,9 @@ class Plotting:
                 data=df, 
                 hue=hue, 
                 hue_order=hue_order,
-                size=4, 
+                size=8, 
                 palette=palette, 
-                linewidth=0.5, 
+                linewidth=1, 
                 alpha=0.3,
                 edgecolor='white',
                 jitter=0.25

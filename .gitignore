@@ -1,8 +1,20 @@
 # macOS system files
 .DS_Store
-._.DS_Store
+**/.DS_Store
+._*
+.Trashes
+.Spotlight-V100
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
-._*
+# Python cache
+__pycache__/
+
+
+# R history
+.Rhistory
+.RData
+
+# Misc
+*.log

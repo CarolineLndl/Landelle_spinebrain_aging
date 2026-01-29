@@ -111,23 +111,19 @@ class Statistics:
         m1_all = np.stack(matrix1); m1_mean=np.nanmean(m1_all,axis=0)
         m2_all = np.stack(matrix2); m2_mean=np.nanmean(m2_all,axis=0)
 
-        all_nodes_m1=[];all_nodes_m2=[]
-        for i in range(n_nodes):
-            m1_vec = m1_mean[i, :]
-            m2_vec = m2_mean[i, :]
-            mask = np.ones(n_nodes, dtype=bool)
-            mask[i] = False
-            m1_vec = m1_vec[mask]
-            m2_vec = m2_vec[mask]
-            
-            # Filter valid entries
-            valid = np.isfinite(m1_vec) & np.isfinite(m2_vec)
-            all_nodes_m1.append(m1_vec[valid])
-            all_nodes_m2.append(m2_vec[valid])
+        # --- Extract unique undirected edges only (upper triangle, no diagonal) ---
+        triu_idx = np.triu_indices(n_nodes, k=1)
 
-        all_data[metrics[0]]=np.concatenate(all_nodes_m1)
-        all_data[metrics[1]]=np.concatenate(all_nodes_m2)
+        m1_edges = m1_mean[triu_idx]
+        m2_edges = m2_mean[triu_idx]
+
+        valid = np.isfinite(m1_edges) & np.isfinite(m2_edges)
+
+        all_data[metrics[0]] = m1_edges[valid]
+        all_data[metrics[1]] = m2_edges[valid]
+
         all_data = pd.DataFrame(all_data)
+
         if df_out:
             if metadata_df is None:
                 raise ValueError("Please provide a metadata dataframe with 'participant_id', 'age' and 'sex' columns for each individual")
@@ -151,6 +147,8 @@ class Statistics:
             df = pd.DataFrame(data_list)
 
         return (regional_coupling if df is None or df.empty else df), all_data
+    
+    
 
 
     

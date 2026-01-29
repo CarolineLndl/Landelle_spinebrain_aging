@@ -65,22 +65,25 @@ def tSNR(config=None,ID=None,i_img=None,mask=None,structure='brain',o_tag="_moco
         redo: put True to re-run the analysis on existing file (default=False)
     
     '''
-    project="stratals" if ID[0]=="A" else "bmpd"
+    
+    preproc_dir=config["main_dir"]+ config["preprocess_dir"]["bmpd_dir"] if ID[0]=="P" else config["main_dir"] +config["preprocess_dir"]["main_dir"]
+    ID_preproc_dir=preproc_dir + "/sub-" + ID
 
     if i_img==None:
-        i_img= glob.glob(config["preproc_dir_"+project] + config["moco_files"]["dir"].format(ID,structure) + config["moco_files"]["moco_f"])[0]
+        i_img= glob.glob(ID_preproc_dir +"/func/"+config["preprocess_dir"]["func_moco"]  + structure + "/*_moco.nii.gz")[0]
         
     if mask==None:
         if structure=="spinalcord":
-            mask=glob.glob(config["preproc_dir_"+project]+ config["seg_files"]["dir_mask"].format(ID,structure) +"/cord/*mean_seg.nii.gz")[0]
+            mask=glob.glob(ID_preproc_dir +"/func/"+config["preprocess_dir"]["func_seg"]["spinalcord"] +"/*mean_seg.nii.gz")[0]
         else:
-            mask_gmwm=glob.glob(config["preproc_dir_"+project]+ config["seg_files"]["dir_brain_tissue"].format(ID,structure) +"/p1p2*inFunc.nii*")[0]
-            mask_gmwmcsf=glob.glob(config["preproc_dir_"+project]+ config["seg_files"]["dir_mask"].format(ID,structure) +"/*mask.nii.gz")[0]
+            mask_gmwm=glob.glob(ID_preproc_dir +"/anat/brain/segmentation/mri/p1p2*inFunc.nii*")[0]
+            #mask_gmwmcsf=glob.glob(ID_preproc_dir +"/anat/brain/segmentation/mri/*mask.nii.gz")[0]
         
 
-    native_tSNR= config["tSNR"]["dir"] + "sub-"+ ID +"/" + os.path.basename(i_img).split(".")[0] + "_tSNR.nii"
+    native_tSNR= config["main_dir"]+config["tSNR_dir"] + "sub-"+ ID +"/" + os.path.basename(i_img).split(".")[0] + "_tSNR.nii"
     # compute tSNR *******************************************************************************
     if not os.path.exists(native_tSNR) or redo==True:
+        print("coucou1")
         if not os.path.exists(os.path.dirname(native_tSNR)):
             os.mkdir(os.path.dirname(native_tSNR))
         tsnr_func= math_img('img.mean(axis=3) / img.std(axis=3)', img=i_img)
@@ -88,8 +91,9 @@ def tSNR(config=None,ID=None,i_img=None,mask=None,structure='brain',o_tag="_moco
         tsnr_func_smooth.to_filename(native_tSNR)
 
     # extract value inside the mask
-    o_txt=config["tSNR"]["dir"] + "sub-"+ ID +"/sub-" + ID + "_" + structure +o_tag +"_tSNR_mean.txt"
+    o_txt=config["main_dir"]+config["tSNR_dir"] + "sub-"+ ID +"/sub-" + ID + "_" + structure +o_tag +"_tSNR_mean.txt"
     if not os.path.exists(o_txt) or redo==True:
+        print("coucou2")
         if redo==True:
             os.remove(o_txt) 
         mask_name=["gmwm","gmwmcsf"]
@@ -115,7 +119,7 @@ def tSNR(config=None,ID=None,i_img=None,mask=None,structure='brain',o_tag="_moco
             preprocess_Sc=Preprocess_Sc(config)
             outreg_f=native_tSNR.split('.')[0] +"_inTemplate.nii.gz" #tSNR in template space
             if not os.path.exists(outreg_f):
-                warp_img= glob.glob(config["preproc_dir_"+project] + config["warp_files"]["dir_sc"].format(ID,structure) + config["warp_files"]["warp_func2PAM50"])[0] # warping field
+                warp_img= glob.glob(ID_preproc_dir + config["warp_files"]["dir_sc"].format(ID,structure) + config["warp_files"]["warp_func2PAM50"])[0] # warping field
                 preprocess_Sc.apply_warp(ID=ID,
                                          i_img=native_tSNR ,
                                          o_folder=os.path.dirname(native_tSNR)+ "/",
@@ -132,9 +136,9 @@ def tSNR(config=None,ID=None,i_img=None,mask=None,structure='brain',o_tag="_moco
             coreg2anat_f=native_tSNR.split('.')[0] +"_inAnat.nii"
             if not os.path.exists(coreg2anat_f) or redo==True:
                 # coregistration to anat space
-                print(config["preproc_dir_"+project] + config["warp_files"]["dir_sc"].format(ID,structure) + config["warp_files"]["warp_func2PAM50"])
+                print(ID_preproc_dir + config["warp_files"]["dir_sc"].format(ID,structure) + config["warp_files"]["warp_func2PAM50"])
                 
-                anat_f= glob.glob(config["preproc_dir_"+project] + config["brain_anat"]["file"].format(ID))[0] 
+                anat_f= glob.glob(ID_preproc_dir + config["brain_anat"]["file"].format(ID))[0] 
                 
                 preprocess_Br.coregistration_func2anat(ID=ID,anat_img=anat_f,
                                               func_img=native_tSNR,
@@ -143,7 +147,7 @@ def tSNR(config=None,ID=None,i_img=None,mask=None,structure='brain',o_tag="_moco
                   
             # >> Coregitration into MNI space
             if not os.path.exists(coreg2anat_f.split('.')[0] +"_inTemplate.nii.gz"):
-                warp_f=glob.glob(config["preproc_dir_"+project]  + config["warp_files"]["dir_brain"].format(ID,structure) + config["warp_files"]["warp_anat2MNI"])[0]
+                warp_f=glob.glob(ID_preproc_dir  + config["warp_files"]["dir_brain"].format(ID,structure) + config["warp_files"]["warp_anat2MNI"])[0]
                 
                 outreg_f=coreg2anat_f.split('.')[0] + "_inTemplate.nii" # default output
                 preprocess_Br.normalisation(ID=None,
@@ -162,7 +166,7 @@ def tSNR_group(config=None,i_img=None,structure='brain',o_tag="_moco",redo=False
         raise Warning("Provide a list of filenames !")
 
     # Create 4D image
-    o_4d_img=config["tSNR"]["dir"] + "/group/" + "4d_n" + str(len(i_img)) +  "_"+structure+"_tSNR.nii.gz" # output filename
+    o_4d_img=config["main_dir"]+config["tSNR_dir"] + "/group/" + "4d_n" + str(len(i_img)) +  "_"+structure+"_tSNR.nii.gz" # output filename
     os.makedirs(os.path.dirname(o_4d_img), exist_ok=True) # create directory if not exists
     all_files=(' ').join(i_img) # join strings
     
@@ -171,7 +175,7 @@ def tSNR_group(config=None,i_img=None,structure='brain',o_tag="_moco",redo=False
         os.system(string)
 
     # Calculate mean image
-    o_mean_img=config["tSNR"]["dir"] + "/group/" + "mean_n" + str(len(i_img)) +  "_"+structure+"_tSNR.nii.gz" # output filename
+    o_mean_img=config["main_dir"]+config["tSNR_dir"] + "/group/" + "mean_n" + str(len(i_img)) +  "_"+structure+"_tSNR.nii.gz" # output filename
     if not os.path.exists(o_mean_img) or redo==True:
         string="fslmaths " + o_4d_img + " -Tmean " + o_mean_img
         os.system(string)

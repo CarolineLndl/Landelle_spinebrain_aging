@@ -1,11 +1,11 @@
 # Spinal cord structural-functional architecture and its shared organization with the brain across the adult lifespan 
 **Cite:**
-> TBD
+> Landelle, C. CarolineLndl/Landelle_spinebrain_aging: v1.0.0. Zenodo https://doi.org/10.5281/ZENODO.18675164 (2026).
 
-**📜 Preprint:**
+**📜 Related paper:**
 >  Landelle C, Kinany K, St-Onge S, Lungu O, Van De Ville D, Misic B, Marchand-Pauvert V, De Leener B, Doyon J. 
-Spinal cord structural and functional architecture and its shared organization with the brain across the adult lifespan 
-bioRxiv 2025.10.02.679488;  doi: https://doi.org/10.1101/2025.10.02.679488
+Spinal cord structural and functional architecture and its shared organization with the brain across the adult lifespan. Nat Commun (2026). 
+https://doi.org/10.1038/s41467-026-71963-2
 
 **💾 Data:**  
 Functional data of the younger participant is available [here](https://openneuro.org/datasets/ds005075/).  
